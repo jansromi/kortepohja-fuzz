@@ -1,0 +1,30 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 11.00
+# Visual Studio Version 17
+
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "kortepohjaFuzz - VST3", "kortepohjaFuzz_VST3.vcxproj", "{1FFDA83B-7D73-94B0-2CAE-9381A8CF971F}"
+	ProjectSection(ProjectDependencies) = postProject
+		{888BA9A3-7904-C57A-A2D8-C90CA0C9796F} = {888BA9A3-7904-C57A-A2D8-C90CA0C9796F}
+	EndProjectSection
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "kortepohjaFuzz - Shared Code", "kortepohjaFuzz_SharedCode.vcxproj", "{888BA9A3-7904-C57A-A2D8-C90CA0C9796F}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|x64 = Debug|x64
+		Release|x64 = Release|x64
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{1FFDA83B-7D73-94B0-2CAE-9381A8CF971F}.Debug|x64.ActiveCfg = Debug|x64
+		{1FFDA83B-7D73-94B0-2CAE-9381A8CF971F}.Debug|x64.Build.0 = Debug|x64
+		{1FFDA83B-7D73-94B0-2CAE-9381A8CF971F}.Release|x64.ActiveCfg = Release|x64
+		{1FFDA83B-7D73-94B0-2CAE-9381A8CF971F}.Release|x64.Build.0 = Release|x64
+		{888BA9A3-7904-C57A-A2D8-C90CA0C9796F}.Debug|x64.ActiveCfg = Debug|x64
+		{888BA9A3-7904-C57A-A2D8-C90CA0C9796F}.Debug|x64.Build.0 = Debug|x64
+		{888BA9A3-7904-C57A-A2D8-C90CA0C9796F}.Release|x64.ActiveCfg = Release|x64
+		{888BA9A3-7904-C57A-A2D8-C90CA0C9796F}.Release|x64.Build.0 = Release|x64
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal
