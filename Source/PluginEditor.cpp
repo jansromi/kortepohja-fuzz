@@ -10,12 +10,12 @@
 #include "PluginEditor.h"
 
 //==============================================================================
-KortepohjaFuzzAudioProcessorEditor::KortepohjaFuzzAudioProcessorEditor (KortepohjaFuzzAudioProcessor& p)
-    : AudioProcessorEditor (&p), audioProcessor (p)
+KortepohjaFuzzAudioProcessorEditor::KortepohjaFuzzAudioProcessorEditor(KortepohjaFuzzAudioProcessor& p)
+    : AudioProcessorEditor(&p), audioProcessor(p)
 {
     // Make sure that before the constructor has finished, you've set the
     // editor's size to whatever you need it to be.
-    setSize (700, 330);
+    setSize(700, 330);
 
     // Setup gain
     gainSlider.setSliderStyle(Slider::SliderStyle::RotaryHorizontalVerticalDrag);
@@ -54,10 +54,10 @@ KortepohjaFuzzAudioProcessorEditor::~KortepohjaFuzzAudioProcessorEditor()
 }
 
 //==============================================================================
-void KortepohjaFuzzAudioProcessorEditor::paint (juce::Graphics& g)
+void KortepohjaFuzzAudioProcessorEditor::paint(juce::Graphics& g)
 {
     // (Our component is opaque, so we must completely fill the background with a solid colour)
-    g.fillAll (getLookAndFeel().findColour (juce::ResizableWindow::backgroundColourId));
+    g.fillAll(getLookAndFeel().findColour(juce::ResizableWindow::backgroundColourId));
 
 }
 
@@ -92,7 +92,7 @@ void KortepohjaFuzzAudioProcessorEditor::sliderValueChanged(Slider* slider)
 {
     if (slider == &gainSlider)
     {
-        audioProcessor.rawVolume = pow(10, gainSlider.getValue() / 20);
+        //audioProcessor.rawVolume = pow(10, gainSlider.getValue() / 20);
         DBG("moro :D");
     }
 
@@ -102,7 +102,7 @@ void KortepohjaFuzzAudioProcessorEditor::sliderValueChanged(Slider* slider)
         DBG("moro :D");
     }
 
-    if (slider == &toneSlider) 
+    if (slider == &toneSlider)
     {
         // do something with tone value
         DBG("moro :D");

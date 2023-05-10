@@ -18,11 +18,11 @@ class KortepohjaFuzzAudioProcessorEditor : public juce::AudioProcessorEditor,
     public Slider::Listener
 {
 public:
-    KortepohjaFuzzAudioProcessorEditor (KortepohjaFuzzAudioProcessor&);
+    KortepohjaFuzzAudioProcessorEditor(KortepohjaFuzzAudioProcessor&);
     ~KortepohjaFuzzAudioProcessorEditor() override;
 
     //==============================================================================
-    void paint (juce::Graphics&) override;
+    void paint(juce::Graphics&) override;
     void resized() override;
 
     void sliderValueChanged(Slider* slider);
@@ -40,5 +40,5 @@ private:
     Label porinaLabel;
     Label toneLabel;
 
-    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (KortepohjaFuzzAudioProcessorEditor)
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(KortepohjaFuzzAudioProcessorEditor)
 };

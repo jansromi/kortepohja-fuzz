@@ -12,22 +12,58 @@
 //==============================================================================
 KortepohjaFuzzAudioProcessor::KortepohjaFuzzAudioProcessor()
 #ifndef JucePlugin_PreferredChannelConfigurations
-     : AudioProcessor (BusesProperties()
-                     #if ! JucePlugin_IsMidiEffect
-                      #if ! JucePlugin_IsSynth
-                       .withInput  ("Input",  juce::AudioChannelSet::stereo(), true)
-                      #endif
-                       .withOutput ("Output", juce::AudioChannelSet::stereo(), true)
-                     #endif
-                       )
+    : AudioProcessor(BusesProperties()
+#if ! JucePlugin_IsMidiEffect
+#if ! JucePlugin_IsSynth
+        .withInput("Input", juce::AudioChannelSet::stereo(), true)
+#endif
+        .withOutput("Output", juce::AudioChannelSet::stereo(), true)
+#endif
+    )
+, _treeState(*this, nullptr, "PARAMETERS", createParameterLayout())
 #endif
 {
+    _treeState.addParameterListener(inputID, this);
+    _treeState.addParameterListener(mixID, this);
+    _treeState.addParameterListener(outputID, this);
 }
 
 KortepohjaFuzzAudioProcessor::~KortepohjaFuzzAudioProcessor()
 {
+    _treeState.removeParameterListener(inputID, this);
+    _treeState.removeParameterListener(mixID, this);
+    _treeState.removeParameterListener(outputID, this);
 }
 
+AudioProcessorValueTreeState::ParameterLayout KortepohjaFuzzAudioProcessor::createParameterLayout()
+{
+    std::vector <std::unique_ptr<juce::RangedAudioParameter>> params;
+
+    auto pDrive = std::make_unique<juce::AudioParameterFloat>(inputID, inputName, 0.0f, 24.0f, 0.0f);
+    auto pMix = std::make_unique<juce::AudioParameterFloat>(mixID, mixName, 0.0f, 1.0f, 1.0f);
+    auto pOutput = std::make_unique<juce::AudioParameterFloat>(outputID, outputName, -24.0f, 24.0f, 0.0f);
+
+    params.push_back(std::move(pDrive));
+    params.push_back(std::move(pMix));
+    params.push_back(std::move(pOutput));
+
+    return { params.begin(), params.end() };
+}
+
+void KortepohjaFuzzAudioProcessor::parameterChanged(const juce::String& parameterID, float newValue)
+{
+    updateParameters();
+}
+
+/*
+    Called everytime when values are changed
+*/
+void KortepohjaFuzzAudioProcessor::updateParameters()
+{
+    _distortionModule.setDrive(_treeState.getRawParameterValue(inputID)->load());
+    _distortionModule.setMix(_treeState.getRawParameterValue(mixID)->load());
+    _distortionModule.setOutput(_treeState.getRawParameterValue(outputID)->load());
+}
 //==============================================================================
 const juce::String KortepohjaFuzzAudioProcessor::getName() const
 {
@@ -36,29 +72,29 @@ const juce::String KortepohjaFuzzAudioProcessor::getName() const
 
 bool KortepohjaFuzzAudioProcessor::acceptsMidi() const
 {
-   #if JucePlugin_WantsMidiInput
+#if JucePlugin_WantsMidiInput
     return true;
-   #else
+#else
     return false;
-   #endif
+#endif
 }
 
 bool KortepohjaFuzzAudioProcessor::producesMidi() const
 {
-   #if JucePlugin_ProducesMidiOutput
+#if JucePlugin_ProducesMidiOutput
     return true;
-   #else
+#else
     return false;
-   #endif
+#endif
 }
 
 bool KortepohjaFuzzAudioProcessor::isMidiEffect() const
 {
-   #if JucePlugin_IsMidiEffect
+#if JucePlugin_IsMidiEffect
     return true;
-   #else
+#else
     return false;
-   #endif
+#endif
 }
 
 double KortepohjaFuzzAudioProcessor::getTailLengthSeconds() const
@@ -69,7 +105,7 @@ double KortepohjaFuzzAudioProcessor::getTailLengthSeconds() const
 int KortepohjaFuzzAudioProcessor::getNumPrograms()
 {
     return 1;   // NB: some hosts don't cope very well if you tell them there are 0 programs,
-                // so this should be at least 1, even if you're not really implementing programs.
+    // so this should be at least 1, even if you're not really implementing programs.
 }
 
 int KortepohjaFuzzAudioProcessor::getCurrentProgram()
@@ -77,24 +113,29 @@ int KortepohjaFuzzAudioProcessor::getCurrentProgram()
     return 0;
 }
 
-void KortepohjaFuzzAudioProcessor::setCurrentProgram (int index)
+void KortepohjaFuzzAudioProcessor::setCurrentProgram(int index)
 {
 }
 
-const juce::String KortepohjaFuzzAudioProcessor::getProgramName (int index)
+const juce::String KortepohjaFuzzAudioProcessor::getProgramName(int index)
 {
     return {};
 }
 
-void KortepohjaFuzzAudioProcessor::changeProgramName (int index, const juce::String& newName)
+void KortepohjaFuzzAudioProcessor::changeProgramName(int index, const juce::String& newName)
 {
 }
 
 //==============================================================================
-void KortepohjaFuzzAudioProcessor::prepareToPlay (double sampleRate, int samplesPerBlock)
+void KortepohjaFuzzAudioProcessor::prepareToPlay(double sampleRate, int samplesPerBlock)
 {
-    // Use this method as the place to do any pre-playback
-    // initialisation that you need..
+    dsp::ProcessSpec spec;
+    spec.maximumBlockSize = samplesPerBlock;
+    spec.sampleRate = sampleRate;
+    spec.numChannels = getTotalNumOutputChannels();
+
+    _distortionModule.prepare(spec);
+    updateParameters();
 }
 
 void KortepohjaFuzzAudioProcessor::releaseResources()
@@ -104,62 +145,43 @@ void KortepohjaFuzzAudioProcessor::releaseResources()
 }
 
 #ifndef JucePlugin_PreferredChannelConfigurations
-bool KortepohjaFuzzAudioProcessor::isBusesLayoutSupported (const BusesLayout& layouts) const
+bool KortepohjaFuzzAudioProcessor::isBusesLayoutSupported(const BusesLayout& layouts) const
 {
-  #if JucePlugin_IsMidiEffect
-    juce::ignoreUnused (layouts);
+#if JucePlugin_IsMidiEffect
+    juce::ignoreUnused(layouts);
     return true;
-  #else
+#else
     // This is the place where you check if the layout is supported.
     // In this template code we only support mono or stereo.
     // Some plugin hosts, such as certain GarageBand versions, will only
     // load plugins that support stereo bus layouts.
     if (layouts.getMainOutputChannelSet() != juce::AudioChannelSet::mono()
-     && layouts.getMainOutputChannelSet() != juce::AudioChannelSet::stereo())
+        && layouts.getMainOutputChannelSet() != juce::AudioChannelSet::stereo())
         return false;
 
     // This checks if the input layout matches the output layout
-   #if ! JucePlugin_IsSynth
+#if ! JucePlugin_IsSynth
     if (layouts.getMainOutputChannelSet() != layouts.getMainInputChannelSet())
         return false;
-   #endif
+#endif
 
     return true;
-  #endif
+#endif
 }
 #endif
 
-void KortepohjaFuzzAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce::MidiBuffer& midiMessages)
+void KortepohjaFuzzAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer, juce::MidiBuffer& midiMessages)
 {
     juce::ScopedNoDenormals noDenormals;
-    auto totalNumInputChannels  = getTotalNumInputChannels();
+    auto totalNumInputChannels = getTotalNumInputChannels();
     auto totalNumOutputChannels = getTotalNumOutputChannels();
 
-    // In case we have more outputs than inputs, this code clears any output
-    // channels that didn't contain input data, (because these aren't
-    // guaranteed to be empty - they may contain garbage).
-    // This is here to avoid people getting screaming feedback
-    // when they first compile a plugin, but obviously you don't need to keep
-    // this code if your algorithm always overwrites all the output channels.
     for (auto i = totalNumInputChannels; i < totalNumOutputChannels; ++i)
-        buffer.clear (i, 0, buffer.getNumSamples());
+        buffer.clear(i, 0, buffer.getNumSamples());
 
-    // This is the place where you'd normally do the guts of your plugin's
-    // audio processing...
-    // Make sure to reset the state if your inner loop is processing
-    // the samples and the outer loop is handling the channels.
-    // Alternatively, you can process the samples with the channels
-    // interleaved by keeping the same state.
-    for (int channel = 0; channel < totalNumInputChannels; ++channel)
-    {
-        auto* channelData = buffer.getWritePointer (channel);
-
-        // ..do something to the data...
-        for (int sample = 0; sample < buffer.getNumSamples(); ++sample)
-        {
-            channelData[sample] = buffer.getSample(channel, sample) * rawVolume;
-        }
-    }
+    dsp::AudioBlock<float> block {buffer};
+    _distortionModule.process(dsp::ProcessContextReplacing<float>(block));
+    
 }
 
 //==============================================================================
@@ -170,18 +192,19 @@ bool KortepohjaFuzzAudioProcessor::hasEditor() const
 
 juce::AudioProcessorEditor* KortepohjaFuzzAudioProcessor::createEditor()
 {
-    return new KortepohjaFuzzAudioProcessorEditor (*this);
+    //return new KortepohjaFuzzAudioProcessorEditor(*this);
+    return new GenericAudioProcessorEditor(*this);
 }
 
 //==============================================================================
-void KortepohjaFuzzAudioProcessor::getStateInformation (juce::MemoryBlock& destData)
+void KortepohjaFuzzAudioProcessor::getStateInformation(juce::MemoryBlock& destData)
 {
     // You should use this method to store your parameters in the memory block.
     // You could do that either as raw data, or use the XML or ValueTree classes
     // as intermediaries to make it easy to save and load complex data.
 }
 
-void KortepohjaFuzzAudioProcessor::setStateInformation (const void* data, int sizeInBytes)
+void KortepohjaFuzzAudioProcessor::setStateInformation(const void* data, int sizeInBytes)
 {
     // You should use this method to restore your parameters from this memory block,
     // whose contents will have been created by the getStateInformation() call.
@@ -192,4 +215,5 @@ void KortepohjaFuzzAudioProcessor::setStateInformation (const void* data, int si
 juce::AudioProcessor* JUCE_CALLTYPE createPluginFilter()
 {
     return new KortepohjaFuzzAudioProcessor();
+    
 }
